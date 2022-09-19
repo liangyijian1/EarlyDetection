@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeDeletion="false" showNewOnSourceInSync="false">
+    <option name="confirmBeforeDeletion" value="false" />
+    <serverData>
+      <paths name="A4000">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/autodl-tmp/dl" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="A4000-2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/autodl-tmp/dl" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="root@region-41.autodl.com:31058 password">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/autodl-tmp/eqrly" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

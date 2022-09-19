@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="e3228103-66ee-40b8-b8f2-4aa9524c0b31" name="A4000-2">
+        <fileTransfer rootFolder="/root" accessType="SFTP" host="region-4.autodl.com" port="42906" sshConfigId="b6677161-c5c8-4149-aac6-32bc46c824c3" sshConfig="root@region-4.autodl.com:42906 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
