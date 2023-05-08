@@ -372,13 +372,11 @@ def extractNormalImagePatch():
 
 
 if __name__ == '__main__':
-    # 24 40 56 72 88  2034
     basicTag('early',
              '../source/patches56',
              '../source/basicAugmentation',
              box_size=56,
              n_patch=6)
-
     # MarkLabel('1', 56).validation('normal', 6, '../source/patches56/')
     # extractNormalImagePatch()
     #
@@ -387,39 +385,6 @@ if __name__ == '__main__':
     #                       deg=2,
     #                       patch_num=9,
     #                       box_size=56)
-
-    # from pytorch_grad_cam import GradCAM
-    # import torch.nn as nn
-    # from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-    # from pytorch_grad_cam.utils.image import show_cam_on_image
-    # import matplotlib.pyplot as plt
-    # transform = torchvision.transforms.Compose([
-    #     torchvision.transforms.ToTensor(),
-    #     torchvision.transforms.Grayscale()
-    # ])
-    # net = torchvision.models.resnet18(pretrained=True)
-    # net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-    # net.fc = nn.Linear(in_features=512, out_features=2, bias=True)
-    # net.load_state_dict(torch.load('../output/model/resnet18/net_15.pth'))
-    #
-    # # img = cv2.imread('../source/testdir/test/early/early-587.jpg')
-    # img = cv2.imread('../source/testdir/test/early/early-540.jpg')
-    # img_tensor = transform(img)
-    # input_tensor = torch.unsqueeze(img_tensor, 0)
-
-    # target_layers = [net.layer4[-1]]
-    # cam = GradCAM(model=net, target_layers=target_layers, use_cuda=True)
-    # targets = [ClassifierOutputTarget(1)]
-    #
-    # grayscale_cam = cam(input_tensor=input_tensor, targets=targets)
-    # grayscale_cam = grayscale_cam[0, :]
-    # visualization = show_cam_on_image(img.astype(dtype=np.float32) / 255., grayscale_cam, use_rgb=True)
-    # plt.subplot(1, 2, 1)
-    # plt.imshow(visualization)
-    #
-    # plt.subplot(1, 2, 2)
-    # plt.imshow(grayscale_cam)
-    # plt.show()
 
 
 
