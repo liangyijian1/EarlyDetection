@@ -894,7 +894,9 @@ def confusionMatrixDisplay(y_true, y_pred):
     import matplotlib.pyplot as plt
     confusionMatrix = confusion_matrix(y_true, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=confusionMatrix)
-    disp.plot()
+    ax = plt.figure().subplots()
+    ax.set(title="ours")
+    disp.plot(ax=ax)
     plt.show()
 
 
@@ -1329,7 +1331,7 @@ def find_max_region(file, mbKSize=15, denoiseScheme='other', topMargin=15, botto
                 file[j][col] = 0
         afterDenoise = cv2.medianBlur(file, mbKSize)
     elif denoiseScheme == 'other':
-        afterDenoise = file
+        afterDenoise = cv2.medianBlur(file, mbKSize)
     temp = np.copy(afterDenoise)
     ret, threshold = cv2.threshold(temp, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     # stats对应的是x,y,width,height和面积， centroids为中心点， labels表示各个连通区在图上的表示

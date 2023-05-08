@@ -218,14 +218,15 @@ def extractTestImagePatch(root_path: str,
     """
     patch_num -= 1
     for _type in os.listdir(root_path):
-        # _type = 'early'
+        _type = 'normal'
         imgs = os.listdir(root_path + '/' + _type)
         for imgName in imgs:
             # if imgName != 'early-169.jpg':
             #     continue
             img = cv2.imread(root_path + '/' + _type + '/' + imgName, 0)
             location = []
-            region = find_max_region(file=img, mbKSize=15)
+            region = find_max_region(file=img, mbKSize=17)
+            # cv2.imwrite('./mask.jpg', region)
             col = region.shape[1]
             row = region.shape[0]
             for i in range(col):
@@ -267,6 +268,7 @@ def extractTestImagePatch(root_path: str,
                     cutpoints[idx] = r_border
             # 保存所有的patch
             c_img = np.copy(img)
+            c_img = cv2.cvtColor(c_img, cv2.COLOR_GRAY2RGB)
             os.makedirs(patches_path + '/' + _type + '/' + imgName[:-4], exist_ok=True)
             for idx, cutpoint in enumerate(cutpoints):
                 row = p1(cutpoint)
@@ -286,20 +288,21 @@ def extractTestImagePatch(root_path: str,
                     end = [int(start[0] + box_size), int(start[1] + box_size)]
                 tmp = img[start[1]:end[1], start[0]:end[0]]
                 cv2.imwrite(patches_path + '/' + _type + '/' + imgName[:-4] + '/{}.jpg'.format(idx.__str__()), tmp)
-                cv2.rectangle(c_img, start, end, 255)
+                cv2.rectangle(c_img, start, end, [0, 0, 255])
+            cv2.imwrite('./patches.jpg', c_img)
             print(_type + '/' + imgName)
 
 def extractNormalImagePatch():
     n_patch = 5
     box_size = 56
     patches_path = '../source/patches56'
-    root_path = '../source/basicAugmentation'
+    root_path = '../source/testdir/test'
     for _type in os.listdir(root_path):
-        _type = 'normal'
+        _type = 'early'
         imgs = os.listdir(root_path + '/' + _type)
         for imgName in imgs:
-            # if imgName != 'normal-2034.jpg':
-            #     continue
+            if imgName != 'early-198.jpg':
+                continue
             img = cv2.imread(root_path + '/' + _type + '/' + imgName, 0)
             location = []
             region = find_max_region(file=img, mbKSize=15)
@@ -362,9 +365,9 @@ def extractNormalImagePatch():
                     start = [int(current_point[0] - box_size / 2), int(current_point[1] - box_size / 2)]
                     end = [int(start[0] + box_size), int(start[1] + box_size)]
                 tmp = img[start[1]:end[1], start[0]:end[0]]
-                cv2.imwrite(patches_path + '/' + _type + '/' + imgName[:-4] + '/{}.jpg'.format(idx.__str__()), tmp)
+                # cv2.imwrite(patches_path + '/' + _type + '/' + imgName[:-4] + '/{}.jpg'.format(idx.__str__()), tmp)
                 cv2.rectangle(c_img, start, end, 255)
-            cv2.imwrite('./temp/{}'.format(imgName), c_img)
+            cv2.imwrite('./tmp/{}'.format(imgName), c_img)
             print(_type + '/' + imgName)
 
 
@@ -375,13 +378,14 @@ if __name__ == '__main__':
              '../source/basicAugmentation',
              box_size=56,
              n_patch=6)
+
     # MarkLabel('1', 56).validation('normal', 6, '../source/patches56/')
     # extractNormalImagePatch()
     #
-    # extractTestImagePatch(root_path='../source/testdir/test',
-    #                       patches_path='../source/testdir/test56',
+    # extractTestImagePatch(root_path='./denoise',
+    #                       patches_path='./test56',
     #                       deg=2,
-    #                       patch_num=3,
+    #                       patch_num=9,
     #                       box_size=56)
 
     # from pytorch_grad_cam import GradCAM
@@ -402,7 +406,7 @@ if __name__ == '__main__':
     # img = cv2.imread('../source/testdir/test/early/early-540.jpg')
     # img_tensor = transform(img)
     # input_tensor = torch.unsqueeze(img_tensor, 0)
-    #
+
     # target_layers = [net.layer4[-1]]
     # cam = GradCAM(model=net, target_layers=target_layers, use_cuda=True)
     # targets = [ClassifierOutputTarget(1)]

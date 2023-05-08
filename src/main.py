@@ -2,12 +2,12 @@ import functools
 import operator
 import sys
 
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+from matplotlib import pyplot as plt
 
 sys.path.append('/root/autodl-octnet/eqrly/src')
 sys.path.append('/root/autodl-octnet/eqrly/src/net/GlobalLocal')
-from pytorch_grad_cam import GradCAM
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_curve, auc
 from utils.utils import confusionMatrixDisplay
 import numpy as np
 import os
@@ -157,7 +157,7 @@ def GlobalLocalTransformerTest(test_loader,
                 y_true.append(_labels.cpu().numpy().tolist())
             y_pred = np.array(functools.reduce(operator.concat, y_pred), dtype=np.int64)
             y_true = np.array(functools.reduce(operator.concat, y_true), dtype=np.int64)
-            # confusionMatrixDisplay(y_true, y_pred)
+            confusionMatrixDisplay(y_true, y_pred)
             accuracy = accuracy_score(y_true, y_pred)
             precision = precision_score(y_true, y_pred, average='weighted')
             recall = recall_score(y_true, y_pred, average='weighted')
@@ -198,7 +198,11 @@ def ComparisonExperimentTrain(model: str,
     elif model == 'resnet18':
         net = torchvision.models.resnet18(pretrained=True)
         net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-        net.fc = nn.Linear(in_features=512, out_features=2, bias=True)
+        net.fc = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(in_features=512, out_features=2, bias=True),
+            nn.Softmax()
+        )
     elif model == 'micronet':
         pass
         # net = micronet()
@@ -259,13 +263,13 @@ def ComparisonExperimentTest(model: str,
         net.features[0] = nn.Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
         net.add_module('add_linear', nn.Linear(1000, 2))
     elif model == 'resnet18':
-        net = torchvision.models.resnet18(pretrained=True)
+        net = torchvision.models.resnet18(pretrained=False)
         net.conv1 = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
-        net.fc = nn.Linear(in_features=512, out_features=2, bias=True)
-    elif model == 'micronet':
-        pass
-        # net = micronet()
-        # net.features[0].stem[0] = nn.Conv2d(1, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        net.fc = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(in_features=512, out_features=2, bias=True),
+            nn.Softmax(dim=1)
+        )
     elif model == 'efficientnet_b0':
         net = torchvision.models.efficientnet_b0(pretrained=True)
         net.features[0][0] = nn.Conv2d(1, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
@@ -291,20 +295,41 @@ def ComparisonExperimentTest(model: str,
         for k in range(n_test):
             y_pred = []
             y_true = []
+            l_roc = []
             for i, test_data in enumerate(test_loader):
                 net.eval()
                 _inputs, _labels = test_data
                 _inputs, _labels = _inputs.to(device), _labels.to(device)
                 _outputs = net(_inputs)
-                # if model == 'inception_v3':
-                #     _outputs = _outputs[0]
                 _loc_predicts = torch.argmax(_outputs, 1)
-                _loss = loss_fun(_outputs, _labels)
+                # _loss = loss_fun(_outputs, _labels)
                 y_pred.append(_loc_predicts.cpu().numpy().astype(np.int_).tolist())
                 y_true.append(_labels.cpu().numpy().tolist())
+                # l_roc.append(torch.gather(_outputs, 1, torch.unsqueeze(_labels, 0)).squeeze(0).cpu().numpy().tolist())
+                l_roc.append(_outputs.gather(1, _labels.view(-1, 1)).squeeze(1).cpu().numpy().tolist())
             y_pred = np.array(functools.reduce(operator.concat, y_pred), dtype=np.int64)
             y_true = np.array(functools.reduce(operator.concat, y_true), dtype=np.int64)
-            # confusionMatrixDisplay(y_true, y_pred)
+            l_roc = np.array(functools.reduce(operator.concat, l_roc), dtype=np.int64)
+            confusionMatrixDisplay(y_true, y_pred)
+
+            fpr, tpr, thersholds = roc_curve(y_true, l_roc)
+
+            for i, value in enumerate(thersholds):
+                print("%f %f %f" % (fpr[i], tpr[i], value))
+
+            roc_auc = auc(fpr, tpr)
+
+            plt.plot(fpr, tpr, 'k--', label='ROC (area = {0:.2f})'.format(roc_auc), lw=2)
+
+            plt.xlim([-0.05, 1.05])  # 设置x、y轴的上下限，以免和边缘重合，更好的观察图像的整体
+            plt.ylim([-0.05, 1.05])
+            plt.xlabel('False Positive Rate')
+            plt.ylabel('True Positive Rate')  # 可以使用中文，但需要导入一些库即字体
+            plt.title('ROC Curve')
+            plt.legend(loc="lower right")
+            plt.show()
+
+
             accuracy = accuracy_score(y_true, y_pred)
             precision = precision_score(y_true, y_pred, average='weighted')
             recall = recall_score(y_true, y_pred, average='weighted')
@@ -383,18 +408,20 @@ def comparison_experiment(is_test: bool = False, model: str = 'vgg11'):
                                   )
     else:  # Test
         testDataset = torchvision.datasets.ImageFolder('../source/extra/test', transform)
-        for i in range(1, 35):
+
+        a = 25
+        for i in range(a, a+1):
             print('current pth is:{}'.format(i.__str__()))
             ComparisonExperimentTest(model,
                                      '../output/model/{}/net_{}.pth'.format(model, i),
-                                     test_loader=DataLoader(testDataset, 1, shuffle=True),
+                                     test_loader=DataLoader(testDataset, 3, shuffle=True),
                                      loss_fun=nn.CrossEntropyLoss())
 
 
 if __name__ == '__main__':
     global_local(is_test=True,
-                 backbone='octnet',
+                 backbone='vgg8',
                  patch_size=40,
                  n_block=1)
-    # comparison_experiment(model='resnet18',
+    # comparison_experiment(model='inception_v3',
     #                       is_test=True)
